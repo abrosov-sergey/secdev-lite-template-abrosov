@@ -9,4 +9,4 @@
 POST /api/notifications/ride-arrival  
 
 ## NFR hooks:
-RateLimiting, Timeouts/Retry, Privacy/PII, Observability/Logging, API-Contract/Errors, Security-InputValidation
+RateLimiting, Timeouts/Retry, Privacy/PII, Performance, API-Contract/Errors, Security-InputValidation
