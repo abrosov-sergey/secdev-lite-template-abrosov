@@ -1,3 +1,4 @@
+```mermaid
 
 flowchart TD
 %%{init: {'themeVariables': {'fontSize':'10px'}, 'flowchart': {'nodeSpacing': 50, 'rankSpacing': 50}} }%%
@@ -28,3 +29,5 @@ flowchart TD
     %% Водительские взаимодействия
     B -->|JWT/HTTPS - *Статус, геолокация водителя*| P3
     P1 -->|JWT/HTTPS - *Уведомление о новом заказе*| B
+
+```
