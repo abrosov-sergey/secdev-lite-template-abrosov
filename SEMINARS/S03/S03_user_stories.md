@@ -42,3 +42,49 @@ POST /api/auth/verify-email
 
 ## NFR hooks:
 RateLimiting, Security-InputValidation, Privacy/PII, API-Contract/Errors, Security-AuthN, Data-Integrity
+
+---
+
+# US-024 - Просмотр истории поездок
+Как пользователь, я хочу видеть историю своих поездок, чтобы отслеживать расходы и повторять маршруты.
+
+## Кратко:
+Список завершённых поездок с детализацией (дата, маршрут, стоимость, водитель).
+
+## API/Endpoints:
+GET /api/rides/history
+GET /api/rides/{id}/details
+
+## NFR hooks:
+Security-AuthZ/RBAC, Privacy/PII, Performance, API-Contract/Errors, Data-Integrity
+
+---
+
+# US-025 - Оценка поездки и водителя
+Как пассажир, я хочу оценить поездку и водителя, чтобы поддерживать качество сервиса.
+
+## Кратко: 
+Рейтинг (1-5 звёзд) и текстовый отзыв после завершения поездки.
+
+## API/Endpoints:
+POST /api/rides/{id}/rating
+PUT /api/rides/{id}/feedback
+
+## NFR hooks:
+Data-Integrity, Security-AuthZ/RBAC, RateLimiting, API-Contract/Errors, Auditability
+
+---
+
+# US-026 - Управление способами оплаты
+Как пользователь, я хочу управлять привязанными картами, чтобы быстро оплачивать поездки.
+
+## Кратко:
+Добавление, просмотр и удаление платёжных методов через PCI-совместимый провайдер.
+
+## API/Endpoints:
+GET /api/payment-methods
+POST /api/payment-methods
+DELETE /api/payment-methods/{id}
+
+## NFR hooks:
+Security-Secrets, Privacy/PII, Security-AuthZ/RBAC, API-Contract/Errors, Auditability
