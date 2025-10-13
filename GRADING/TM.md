@@ -249,14 +249,13 @@ flowchart TD
 
 ## 5) Трассировка Threat → NFR → ADR → (План)Проверки (TM5)
 
-| Threat | NFR   | ADR     | Чем проверяем (план/факт)                                                                 |
-|-------:|-------|---------|-------------------------------------------------------------------------------------------|
-| T01    | NFR-1 | ADR-001 | DAST auth-flow (token replay/validation/refresh), интеграционные тесты refresh→revoke; аудит `auth.token_invalid`. План/факт: EVIDENCE/dast-auth-2025-09-30.pdf#token-tests, EVIDENCE/audit-auth-token-invalid.txt |
-| T02    | NFR-2 | ADR-002 | SAST/лог-скан (поиск raw PII), интеграционный тест логгера на маскирование; запуск purge-job и проверка отсутствия raw PII >7d. План/факт: EVIDENCE/sast-2025-09-30.pdf, EVIDENCE/purge-job-report.txt |
-| T03    | NFR-3 | ADR-003 | Интеграционный сценарий и нагрузочный тест симуляции падения внешнего провайдера: retries, circuit-breaker, метрики (external_call_latency/errors, cb_state). План/факт: EVIDENCE/load-after.png, EVIDENCE/external-cb-test.txt |
-| T04    | NFR-205 / NFR-206 | ADR-00X | SAST/semgrep и контрактные тесты (валидаторы схемы, reject extra fields), fuzzing/input-fuzz; интеграционные проверки канонизации/целостности заказа. План/факт: EVIDENCE/sast-YYYY-MM-DD.pdf#input-validation, EVIDENCE/contract-tests.txt |
-| T05    | NFR-201 | ADR-00Y | Нагрузочные сценарии и gateway‑тесты: per-user и global rate limits, проверка 429 + backpressure; проверка конфигурации rate-limit на gateway. План/факт: EVIDENCE/load-rate-limit.png, EVIDENCE/gateway-rate-limit-config.md |
-
+| Threat | NFR | ADR (конкретный) | Чем проверяем |
+|-------:|-----|------------------|---------------|
+| T01 | NFR-1 | **ADR-001 — Auth Token Handling**<br/>(token replay / validation / refresh) | DAST auth-flow (token replay/validation/refresh), интеграционные тесты refresh → revoke, аудит `auth.token_invalid` |
+| T02 | NFR-2 | **ADR-002 — PII Handling & Logging Masking** | SAST / лог-скан (поиск raw PII), интеграционный тест логгера на маскирование, запуск purge-job и проверка отсутствия raw PII >7d |
+| T03 | NFR-3 | **ADR-003 — External Provider Resilience** | Интеграционный сценарий и нагрузочный тест симуляции падения внешнего провайдера: retries, circuit-breaker, метрики (`external_call_latency/errors`, `cb_state`) |
+| T04 | NFR-205 / NFR-206 | **ADR-004 — Server-side Input Validation & Canonicalization** | SAST / semgrep и контрактные тесты (валидаторы схемы, reject extra fields), fuzzing / input-fuzz, интеграционные проверки канонизации/целостности заказа |
+| T05 | NFR-201 | **ADR-005 — Gateway Rate Limiting & Backpressure** | Нагрузочные сценарии и gateway-тесты: per-user и global rate limits, проверка 429 и backpressure, проверка конфигурации rate-limit на gateway |
 
 ---
 
