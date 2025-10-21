@@ -251,9 +251,9 @@ flowchart TD
 
 | Threat | NFR | ADR (конкретный) | Чем проверяем |
 |-------:|-----|------------------|---------------|
-| T01 | NFR-1 | **ADR-001 — Auth Token Handling**<br/>(token replay / validation / refresh) | DAST auth-flow (token replay/validation/refresh), интеграционные тесты refresh → revoke, аудит `auth.token_invalid` |
-| T02 | NFR-2 | **ADR-002 — PII Handling & Logging Masking** | SAST / лог-скан (поиск raw PII), интеграционный тест логгера на маскирование, запуск purge-job и проверка отсутствия raw PII >7d |
-| T03 | NFR-3 | **ADR-003 — External Provider Resilience** | Интеграционный сценарий и нагрузочный тест симуляции падения внешнего провайдера: retries, circuit-breaker, метрики (`external_call_latency/errors`, `cb_state`) |
+| T01 | NFR-202, NFR-305, NFR-101 | **ADR-001 — Auth Token Handling**<br/>(token replay / validation / refresh) | DAST auth-flow (token replay/validation/refresh), интеграционные тесты refresh → revoke, аудит `auth.token_invalid` |
+| T02 | NFR-103, NFR-303, NFR-106 | **ADR-002 — PII Handling & Logging Masking** | SAST / лог-скан (поиск raw PII), интеграционный тест логгера на маскирование, запуск purge-job и проверка отсутствия raw PII >7d |
+| T03 | NFR-102, NFR-104 | **ADR-003 — External Provider Resilience** | Интеграционный сценарий и нагрузочный тест симуляции падения внешнего провайдера: retries, circuit-breaker, метрики (`external_call_latency/errors`, `cb_state`) |
 | T04 | NFR-205 / NFR-206 | **ADR-004 — Server-side Input Validation & Canonicalization** | SAST / semgrep и контрактные тесты (валидаторы схемы, reject extra fields), fuzzing / input-fuzz, интеграционные проверки канонизации/целостности заказа |
 | T05 | NFR-201 | **ADR-005 — Gateway Rate Limiting & Backpressure** | Нагрузочные сценарии и gateway-тесты: per-user и global rate limits, проверка 429 и backpressure, проверка конфигурации rate-limit на gateway |
 
