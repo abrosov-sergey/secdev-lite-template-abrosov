@@ -126,9 +126,9 @@ def test_logging_hide_password():
 ```
 
 
-Скриншоты с подтверждениями:
+Логи, Скриншоты с подтверждениями, версии пакетов:
 
-
+https://github.com/CepbluKot/secdev-lite-template/tree/main/EVIDENCE/S06
 
 ---
 
