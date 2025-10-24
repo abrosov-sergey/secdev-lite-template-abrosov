@@ -245,7 +245,10 @@ https://github.com/CepbluKot/secdev-lite-template/tree/main/EVIDENCE/S07
   ```
 
 - **Стабильность:** последние 4 запуска зелёные
-- **Ссылка/копия лога прогона:** `EVIDENCE/ci-YYYY-MM-DD-build.txt`
+- **Ссылка/копия лога прогона:** https://github.com/CepbluKot/secdev-lite-template/blob/main/EVIDENCE/S08/evidence-s08/test-report.xml
+
+
+Скриншот ci + ссылка на него тут: https://github.com/CepbluKot/secdev-lite-template/tree/main/EVIDENCE/S08
 
 ---
 
@@ -264,49 +267,66 @@ _Сложите файлы в `/EVIDENCE/` и подпишите их назна
 
 ## 5) Секреты и переменные окружения (DV5 - гигиена, без сканеров)
 
-- **Шаблон окружения:** добавлен файл `/.env.example` со списком переменных (без значений), например:
-  - `REG_USER=`
-  - `REG_PASS=`
-  - `API_TOKEN=`
+- **Шаблон окружения:** добавлен файл `/.env.example` со списком переменных:
+  - `APP_NAME=`
+  - `DEBUG=`
+  - `SECRET_KEY=`
 - **Хранение и передача в CI:**  
   - секреты лежат в настройках репозитория/организации (**masked**),  
   - в pipeline они **не печатаются** в явном виде.
-- **Пример использования секрета в job (адаптируйте):**
+- **Пример использования секрета в job:**
 
   ```yaml
-  - name: Login to registry (masked)
-    env:
-      REG_USER: ${{ secrets.REG_USER }}
-      REG_PASS: ${{ secrets.REG_PASS }}
+  - name: Run Python backend tests (masked)
+    shell: bash
     run: |
-      echo "::add-mask::$REG_PASS"
-      echo "$REG_PASS" | docker login -u "$REG_USER" --password-stdin registry.example.com
+      echo "::add-mask::${{ secrets.SECRET_KEY }}"
+      export APP_NAME="${{ secrets.APP_NAME }}" DEBUG="${{ secrets.DEBUG }}" SECRET_KEY="${{ secrets.SECRET_KEY }}"
+      python -m venv .venv && . .venv/bin/activate
+      pip install -r requirements.txt
+      pytest -q
   ```
 
 - **Быстрая проверка отсутствия секретов в коде (любой простой способ):**
 
   ```bash
-  # пример: поиск популярных паттернов
   git grep -nE 'AKIA|SECRET|token=|password=' || true
   ```
 
-  _Сохраните вывод в `EVIDENCE/grep-secrets.txt`._
-- **Памятка по ротации:** TODO: кто/как меняет secrets при утечке/ревоке токена.
+  Вывод представлен в `EVIDENCE/grep-secrets.txt`._
+- **Памятка по ротации:** 1) немедленно отозвать/деактивировать компрометированный секрет; 
+2) сгенерировать новый в хранилище (Vault/Secrets Manager); 
+3) обновить секреты в CI/CD и конфигурации; 
+4) перезапустить/деплой сервисов; 
+5) уведомить владельцев и сделать post-mortem..
 
 ---
 
 ## 6) Индекс артефактов DV
 
-_Чтобы преподаватель быстро сверил файлы._
 
-| Тип     | Файл в `EVIDENCE/`            | Дата/время         | Коммит/версия | Runner/OS    |
-|---------|--------------------------------|--------------------|---------------|--------------|
-| CI-лог  | `ci-YYYY-MM-DD-build.txt`      | `YYYY-MM-DD hh:mm` | `abc123`      | `gha-ubuntu` |
-| Лок.лог | `local-build-YYYY-MM-DD.txt`   | …                  | `abc123`      | `local`      |
-| Package | `package-notes.txt`            | …                  | `abc123`      | -            |
-| Freeze  | `pip-freeze.txt` (или аналог)  | …                  | `abc123`      | -            |
-| Grep    | `grep-secrets.txt`             | …                  | `abc123`      | -            |
 
+| Тип                     | Файл в `EVIDENCE/`                                | Дата/время           | Коммит/версия | Runner/OS        |
+|------------------------:|---------------------------------------------------|----------------------|---------------:|------------------|
+| Log                     | `S06/logs/one-liner.log`                          | 2025-10-24 11:45     | `722f189`      | `ubuntu-24.04`   |
+| Freeze                  | `S06/pip-freeze.txt`                              | 2025-10-24 11:50     | `722f189`      | `ubuntu-24.04`   |
+| Screenshot              | `S06/screenshots/fix-general-exception.png`       | 2025-10-24 11:52     | `722f189`      | `ubuntu-24.04`   |
+| Screenshot              | `S06/screenshots/fix-secure-logs.png`             | 2025-10-24 11:52     | `722f189`      | `ubuntu-24.04`   |
+| Screenshot              | `S06/screenshots/fix-secure-templates.png`        | 2025-10-24 11:52     | `722f189`      | `ubuntu-24.04`   |
+| Screenshot              | `S06/screenshots/tests-ok.png`                     | 2025-10-24 11:53     | `722f189`      | `ubuntu-24.04`   |
+| Test-репорт             | `S06/test-report.xml`                             | 2025-10-24 12:00     | `722f189`      | `ubuntu-24.04`   |
+| Build log               | `S07/build.log`                                   | 2025-10-23 18:30     | `6432a40`      | `ubuntu-24.04`   |
+| Compose output          | `S07/compose-up.log`                              | 2025-10-23 18:32     | `6432a40`      | `ubuntu-24.04`   |
+| Hadolint report         | `S07/hadolint.txt`                                | 2025-10-23 18:33     | `6432a40`      | `ubuntu-24.04`   |
+| Health check            | `S07/health.json`                                 | 2025-10-23 18:34     | `6432a40`      | `ubuntu-24.04`   |
+| HTTP root code          | `S07/http_root_code.txt`                          | 2025-10-23 18:34     | `6432a40`      | `ubuntu-24.04`   |
+| Image size              | `S07/image-size.txt`                              | 2025-10-23 18:35     | `6432a40`      | `ubuntu-24.04`   |
+| Docker inspect          | `S07/inspect_web.json`                            | 2025-10-23 18:36     | `6432a40`      | `ubuntu-24.04`   |
+| Non-root check          | `S07/non-root.txt`                                | 2025-10-23 18:36     | `6432a40`      | `ubuntu-24.04`   |
+| Run log                 | `S07/run.log`                                     | 2025-10-23 18:37     | `6432a40`      | `ubuntu-24.04`   |
+| CI log                  | `S08/ci-run.txt`                                  | 2025-10-24 12:00     | `abc123`       | `ubuntu-24.04`   |
+| CI Test-репорт          | `S08/evidence-s08/test-report.xml`                | 2025-10-24 12:00     | `abc123`       | `ubuntu-24.04`   |
+| CI screenshot           | `S08/green-ci-1.png`                              | 2025-10-24 12:01     | `abc123`       | `ubuntu-24.04`   |
 ---
 
 ## 7) Связь с TM и DS (hook)
