@@ -187,31 +187,64 @@ https://github.com/CepbluKot/secdev-lite-template/tree/main/EVIDENCE/S07
 
 ## 3) CI: базовый pipeline и стабильный прогон (DV3)
 
-- **Платформа CI:** TODO: GitHub Actions / GitLab CI / другое
-- **Файл конфига CI:** TODO: путь (напр., `.github/workflows/ci.yml`)
+- **Платформа CI:** GitHub Actions
+- **Файл конфига CI:** `.github/workflows/ci.yml`
 - **Стадии (минимум):** checkout → deps → **build** → **test** → (package)
 - **Фрагмент конфигурации (ключевые шаги):**
 
   ```yaml
-  # TODO: укоротите под себя
-  jobs:
-  build_test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with: { python-version: '3.11' }
-      - name: Cache deps
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/pip
-          key: pip-${{ hashFiles('**/requirements*.txt') }}
-      - run: pip install -r requirements.txt
-      - run: pytest -q
+
+    name: ci
+
+    on:
+      push:
+      pull_request:
+
+    jobs:
+      build-test:
+        runs-on: ubuntu-latest
+        steps:
+          - name: Checkout
+            uses: actions/checkout@v4
+
+          - name: Setup Python
+            uses: actions/setup-python@v5
+            with:
+              python-version: '3.11'
+
+          - name: Cache pip
+            uses: actions/cache@v4
+            with:
+              path: ~/.cache/pip
+              key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+              restore-keys: |
+                ${{ runner.os }}-pip-
+
+          - name: Install deps
+            run: pip install -r requirements.txt
+
+          - name: Init DB
+            run: python scripts/init_db.py
+
+          - name: Run tests
+            run: |
+              mkdir -p EVIDENCE/S08
+              pytest -q --junitxml=EVIDENCE/S08/test-report.xml
+            continue-on-error: false
+
+          - name: Upload artifacts
+            if: always()
+            uses: actions/upload-artifact@v4
+            with:
+              name: evidence-s08
+              path: |
+                EVIDENCE/S08/**
+              if-no-files-found: warn
+
 
   ```
 
-- **Стабильность:** TODO: последние N запусков зелёные? краткий комментарий
+- **Стабильность:** последние 4 запуска зелёные
 - **Ссылка/копия лога прогона:** `EVIDENCE/ci-YYYY-MM-DD-build.txt`
 
 ---
