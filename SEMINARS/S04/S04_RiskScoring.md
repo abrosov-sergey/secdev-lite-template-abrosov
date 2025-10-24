@@ -34,3 +34,5 @@
 
 * Top-5: R-05 — Массовые запросы / спам заказов (D). L=4, I=3, Score=12. ADR candidate: "Per-user quotas, global rate limits, backpressure".
   - Почему: высока вероятность автоматического абьюза, практический эффект на доступность.
+
+
