@@ -178,6 +178,11 @@ RUN useradd -m -u 10001 appuser && chown -R appuser:appuser /app
 USER appuser
 ```
 
+
+Логи с подтверждениями:
+
+https://github.com/CepbluKot/secdev-lite-template/tree/main/EVIDENCE/S07
+
 ---
 
 ## 3) CI: базовый pipeline и стабильный прогон (DV3)
