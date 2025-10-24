@@ -1,1 +1,1 @@
-secdev-seed latest 154MB
+secdev-seed latest 145MB

@@ -134,17 +134,49 @@ https://github.com/CepbluKot/secdev-lite-template/tree/main/EVIDENCE/S06
 
 ## 2) Контейнеризация (DV2)
 
-- **Dockerfile:** TODO: `path/to/Dockerfile` (база, multi-stage? минимальный образ?)
+- **Dockerfile:** TODO: `Dockerfile` (база, multi-stage? минимальный образ?)
 - **Сборка/запуск локально:**
 
   ```bash
-  docker build -t app:local .
-  docker run --rm -p 8080:8080 app:local
-  ```
+  docker build -t secdev-seed:latest .
+  docker run --rm -p 8000:8000 --name seed secdev-seed:latest
 
-  _Укажите порт/команду/healthcheck, если есть._
+  docker inspect seed | jq '.[0].State.Health' > EVIDENCE/S07/health.json
 
-- **(Опционально) docker-compose:** `TODO: path/to/docker-compose.yml` - кратко, какие сервисы.
+  ``
+
+- **(Опционально) docker-compose:** `docker-compose.yml` - содержит 1 сервис "web", который запускае контейнер с нашим учебным приложением.
+
+Сделал следующие hardenings:
+
+1) S07-10 - Лимиты ресурсов контейнера (лайт)
+
+в docker-compose
+```yaml
+# сделал hardening S07-10 - Лимиты ресурсов контейнера (лайт)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+```
+
+в docker
+
+```
+docker run --memory=512m --cpus="1.0" --rm -p 8000:8000 secdev-seed:latest
+# memory и cpu для hardening S07-10 - Лимиты ресурсов контейнера (лайт)
+```
+
+2) S07-3 - Non-root user (запуск не от root)
+
+
+в docker
+```yaml
+# hardening  S07-3 - Non-root user (запуск не от root)
+RUN useradd -m -u 10001 appuser && chown -R appuser:appuser /app
+USER appuser
+```
 
 ---
 

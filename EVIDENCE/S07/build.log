@@ -1,0 +1,23 @@
+docker build -t secdev-seed:latest .                             
+[+] Building 0.8s (12/12) FINISHED                                                             docker:default
+ => [internal] load build definition from Dockerfile                                                     0.0s
+ => => transferring dockerfile: 1.19kB                                                                   0.0s
+ => [internal] load metadata for docker.io/library/python:3.11-slim                                      0.7s
+ => [internal] load .dockerignore                                                                        0.0s
+ => => transferring context: 152B                                                                        0.0s
+ => [1/7] FROM docker.io/library/python:3.11-slim@sha256:8eb5fc663972b871c528fef04be4eaa9ab8ab4539a5316  0.0s
+ => [internal] load build context                                                                        0.0s
+ => => transferring context: 727B                                                                        0.0s
+ => CACHED [2/7] WORKDIR /app                                                                            0.0s
+ => CACHED [3/7] COPY requirements.txt ./                                                                0.0s
+ => CACHED [4/7] RUN pip install --no-cache-dir -r requirements.txt                                      0.0s
+ => CACHED [5/7] COPY app ./app                                                                          0.0s
+ => CACHED [6/7] COPY scripts ./scripts                                                                  0.0s
+ => CACHED [7/7] RUN useradd -m -u 10001 appuser && chown -R appuser:appuser /app                        0.0s
+ => exporting to image                                                                                   0.0s
+ => => exporting layers                                                                                  0.0s
+ => => writing image sha256:43821c62c1217fabceb080786602501d47c90f96aef4d3ee8a205aa317c50826             0.0s
+ => => naming to docker.io/library/secdev-seed:latest                                                    0.0s
+
+ 1 warning found (use docker --debug to expand):
+ - JSONArgsRecommended: JSON arguments recommended for CMD to prevent unintended behavior related to OS signals (line 21)
