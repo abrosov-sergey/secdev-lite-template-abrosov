@@ -1,0 +1,49 @@
+#1 [internal] load local bake definitions
+#1 reading from stdin 540B done
+#1 DONE 0.0s
+
+#2 [internal] load build definition from Dockerfile
+#2 transferring dockerfile: 30B
+#2 transferring dockerfile: 1.04kB done
+#2 DONE 0.0s
+
+#3 [auth] library/python:pull token for registry-1.docker.io
+#3 DONE 0.0s
+
+#4 [internal] load metadata for docker.io/library/python:3.11-slim
+#4 DONE 2.7s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 152B done
+#5 DONE 0.0s
+
+#6 [1/6] FROM docker.io/library/python:3.11-slim@sha256:ff8533f48e12b705fc20d339fde2ec61d0b234dd9366bab3bc84d7b70a45c8c0
+#6 DONE 0.0s
+
+#7 [internal] load build context
+#7 transferring context: 700B done
+#7 DONE 0.0s
+
+#8 [4/6] RUN pip install --no-cache-dir -r requirements.txt
+#8 CACHED
+
+#9 [3/6] COPY requirements.txt ./
+#9 CACHED
+
+#10 [5/6] COPY app ./app
+#10 CACHED
+
+#11 [2/6] WORKDIR /app
+#11 CACHED
+
+#12 [6/6] COPY scripts ./scripts
+#12 CACHED
+
+#13 exporting to image
+#13 exporting layers done
+#13 writing image sha256:3c8a9a0f1ded6aa4b84bed130ea20feef8efa3098f77f38f6d697d9c48f092ac done
+#13 naming to docker.io/library/secdev-seed:latest done
+#13 DONE 0.0s
+
+#14 resolving provenance for metadata file
+#14 DONE 0.0s
