@@ -1,16 +1,14 @@
 # DV - Мини-проект «DevOps-конвейер»
 
-> Этот файл - **индивидуальный**. Его проверяют по **rubric_DV.md** (5 критериев × {0/1/2} → 0-10).
-> Подсказки помечены `TODO:` - удалите после заполнения.
 > Все доказательства/скрины кладите в **EVIDENCE/** и ссылайтесь на конкретные файлы/якоря.
 
 ---
 
 ## 0) Мета
 
-- **Проект (опционально BYO):** TODO: ссылка / «учебный шаблон»
-- **Версия (commit/date):** TODO: abc123 / YYYY-MM-DD
-- **Кратко (1-2 предложения):** TODO: что именно собираем/тестируем/пакуем
+- **Проект (опционально BYO):** «учебный шаблон»
+- **Версия (commit/date):** 2025-10-24
+- **Кратко (1-2 предложения):** «DevOps-конвейер»
 
 ---
 
@@ -19,23 +17,118 @@
 - **Одна команда для сборки/тестов:**
 
   ```bash
-  # TODO: замените на ваш one-liner
-  make build test
+  make ci-s06
   ```
-
-  _Если без Makefile: укажите последовательность команд._
 
 - **Версии инструментов (фиксация):**
 
   ```bash
-  # TODO: примеры - удалите лишнее
   python --version
   pip freeze > EVIDENCE/pip-freeze.txt
-  node --version
-  npm ci --version
   ```
 
-- **Описание шагов (кратко):** TODO: 2-4 пункта как запустить локально
+- **Описание шагов (кратко):**
+
+```bash
+python -m venv .venv
+. .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+python scripts/init_db.py
+uvicorn app.main:app --reload
+```
+
+
+- **Выполненные тесты:**
+
+S06-02 - SQL Injection (search LIKE):
+
+
+**GWT**
+Gherkin
+```Gherkin
+Сценарий: Инъекция в LIKE не возвращает все записи
+Given:   Предзаполненная таблица items
+When:    GET /search?q=' OR '1'='1'
+Then:    Количество результатов не больше, чем для "шумового" запроса ("zzzzzzzzz")
+Artifacts: EVIDENCE/S06/test-report.xml
+Связано с: DV3, DV4
+
+Сценарий: Слишком длинный запрос возвращает 400
+Given:   Сервис поиска развёрнут
+When:    GET /search?q=<очень длинная строка>
+Then:    Код 400
+Artifacts: EVIDENCE/S06/test-report.xml
+Связано с: DV3, DV4
+
+Сценарий: Позитивный поиск возвращает 200
+Given:   В таблице items есть запись с name, содержащим "apple"
+When:    GET /search?q=apple
+Then:    Код 200
+Artifacts: EVIDENCE/S06/test-report.xml
+Связано с: DV3
+```
+
+**pytest**
+```python
+def test_search_should_not_return_all_on_injection():
+    resp_noise = client.get("/search", params={"q": "zzzzzzzzz"}).json()
+    inj = client.get("/search", params={"q": "' OR '1'='1"}).json()
+    assert len(inj["items"]) <= len(
+        resp_noise["items"]
+    ), "Инъекция в LIKE не должна приводить к выдаче всех элементов"
+
+
+def test_search_long_query():
+    resp_long = client.get(
+        "/search",
+        params={
+            "q": "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+        },
+    )
+    assert resp_long.status_code == 400, "Слишком длинный запрос"
+
+
+def test_search_query():
+    # позитивный тест
+    resp_long = client.get(
+        "/search",
+        params={
+            "q": "apple"
+        },
+    )
+    assert resp_long.status_code == 200
+```
+
+- **Выполненные тесты:** S06-05 - Ошибки и логи без утечек
+
+**GWT**
+Gherkin
+```Gherkin
+Сценарий: Внутренняя ошибка не раскрывает детали
+Given:   Обработчик ошибок включён
+When:    Инициируем исключение (спровоцировать контролируемо)
+Then:    Код 500 и "безопасное" тело без стек-трейса/секретов
+Artifacts: EVIDENCE/S06/logs/app.log (если есть), test-report.xml
+Связано с: DV3, DV4, DV5
+```
+
+**pytest**
+```python
+def test_logging_hide_password():
+    payload = {"username": "usr", "password": "pwd"}
+    resp = client.post("/login_w_error", json=payload)
+    print(resp.status_code)
+    assert resp.status_code == 500
+
+    with open('app.log', 'r') as f:
+        file = f.read()
+        assert "pwd" not in file
+```
+
+
+Скриншоты с подтверждениями:
+
+
 
 ---
 
