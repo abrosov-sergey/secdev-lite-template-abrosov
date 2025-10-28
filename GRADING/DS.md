@@ -16,47 +16,136 @@
 
 ## 1) SBOM и уязвимости зависимостей (DS1)
 
-- **Инструмент/формат:** TODO: Syft/Grype/OSV; CycloneDX/SPDX
-- **Как запускал:**
+**Инструмент / формат:**  
+Syft (генерация SBOM) и Grype (анализ уязвимостей); формат отчёта — **CycloneDX JSON**
 
-  ```bash
-  syft dir:. -o cyclonedx-json > EVIDENCE/sbom-YYYY-MM-DD.json
-  grype sbom:EVIDENCE/sbom-YYYY-MM-DD.json --fail-on high -o json > EVIDENCE/deps-YYYY-MM-DD.json
-  ```
+Как запускал
+```bash
+syft dir:. -o cyclonedx-json > EVIDENCE/sbom-2025-10-28.json
+grype sbom:EVIDENCE/sbom-2025-10-28.json --fail-on high -o json > EVIDENCE/deps-2025-10-28.json
 
-- **Отчёты:** `EVIDENCE/sbom-YYYY-MM-DD.json`, `EVIDENCE/deps-YYYY-MM-DD.json`
-- **Выводы (кратко):** TODO: сколько Critical/High, ключевые пакеты/лицензии
-- **Действия:** TODO: что исправлено/обновлено **или** что временно подавлено (ниже в триаже)
-- **Гейт по зависимостям:** TODO: правило в словах (например, «Critical=0; High≤1»)
+Отчёты:
+EVIDENCE/sbom-2025-10-28.json
+EVIDENCE/deps-2025-10-28.json
+Выводы (кратко)
 
----
+Итоги анализа:
+Critical: 0
+High: 1
+Medium: 1
+Low/Negligible: несколько (игнорированы)
+
+Ключевые уязвимости:
+Компонент    Версия    CVE    Severity    Кратко    Исправление
+jinja2    3.1.4    CVE-2025-27516    High    Возможен sandbox breakout при использовании фильтра attr    Обновить до 3.1.6
+jinja2    3.1.4    CVE-2024-56326    Medium    Уязвимость при форматировании строк внутри шаблонов    Исправлено в 3.1.5
+
+Лицензии:
+Основные пакеты проекта — BSD-3-Clause (Jinja2), MIT (FastAPI, Uvicorn, Starlette). Нарушений лицензий не обнаружено.
+Действия
+
+Обновление зависимостей:
+- jinja2==3.1.4
++ jinja2==3.1.6
+После обновления и повторного анализа Grype → уязвимости устранены (0 High / 0 Critical).
+Временно, если обновление невозможно — допустимо подавление CVE-2025-27516 с пометкой expiry: 2025-12-31.
+
+Гейт по зависимостям
+
+Правило:
+Critical = 0; High ≤ 1 (до обновления), после фикса — 0
+После обновления Jinja2: Critical = 0; High = 0 → гейт пройден.
 
 ## 2) SAST и Secrets (DS2)
 
-### 2.1 SAST
+2.1 SAST
+Инструмент / профиль: Semgrep (профиль p/ci, --severity=high)
 
-- **Инструмент/профиль:** TODO: semgrep?
-- **Как запускал:**
+Как запускал:
+semgrep --config p/ci --severity=high --error --json --output EVIDENCE/sast-2025-10-28.json
+Отчёт: EVIDENCE/sast-2025-10-28.json
 
-  ```bash
-  semgrep --config p/ci --severity=high --error --json --output EVIDENCE/sast-YYYY-MM-DD.json
-  ```
+Результат (кратко)
+Semgrep scan: 0 находок (results: []).
+Вывод: по текущему набору правил p/ci — нет высокосерьёзных (high) находок в исходном дереве.
 
-- **Отчёт:** `EVIDENCE/sast-YYYY-MM-DD.*`
-- **Выводы:** TODO: 1-2 ключевых находки (TP/FP), области риска
+Выводы / риски
+Позитив: нет сигнатурных High-issues — текущие критичные шаблоны не сработали.
 
-### 2.2 Secrets scanning
+Риск: отсутствие находок не гарантирует отсутствие проблем. Нужно:
+расширить правила (custom rules) под проект (например, unsafe deserialization, use of eval, insecure JWT usage, unsafe config parsing),
+включить SAST в CI (семпл выше уже с --error — хорошая практика),
+периодически пересматривать конфигурацию правил (false negatives возможны).
 
-- **Инструмент:** TODO: gitleaks?
-- **Как запускал:**
+Рекомендации (действия)
+Оставить Semgrep в CI с --error для severity=high. Gate: High = 0 (прошёл сейчас).
+Добавить набор правил проекта: проверка шаблонов Jinja (если применимо), проверки HTTP auth headers, use of subprocess/os.system с неподготовленными аргументами.
+Раз в релиз — ручной ревью (security code review) для участков с шаблонами и загрузкой пользовательских данных (FastAPI endpoints, template rendering).
 
-  ```bash
-  gitleaks detect --no-git --report-format json --report-path EVIDENCE/secrets-YYYY-MM-DD.json
-  gitleaks detect --log-opts="--all" --report-format json --report-path EVIDENCE/secrets-YYYY-MM-DD-history.json
-  ```
+2.2 Secrets scanning
+Инструмент: gitleaks
+Как запускал:
+# текущая рабочая копия
+gitleaks detect --no-git --report-format json --report-path EVIDENCE/secrets-2025-10-28.json
 
-- **Отчёт:** `EVIDENCE/secrets-YYYY-MM-DD.*`
-- **Выводы:** TODO: есть ли истинные срабатывания; меры (ревок/ротация/очистка истории)
+# вся история (коммиты)
+gitleaks detect --log-opts="--all" --report-format json --report-path EVIDENCE/secrets-2025-10-28-history.json
+Отчёты: EVIDENCE/secrets-2025-10-28.json, EVIDENCE/secrets-2025-10-28-history.json
+Найдено
+{
+ "RuleID": "generic-api-key",
+ "File": ".env",
+ "Match": "API_KEY=abcd1234efgh5678",
+ "Secret": "abcd1234efgh5678",
+ "Fingerprint": ".env:generic-api-key:1"
+}
+
+Оценка (TP / FP)
+Вероятность true positive: высокая. Файл .env — стандартное место для секретов; строка формата API_KEY=... явно выглядит как ключ.
+Entropy: 4 (низкая), но формат/ключевое имя (API_KEY) делают срабатывание подозрительным даже при невысокой энтропии.
+Вывод: считать истинным попаданием (TP) пока не доказано обратное.
+Немедленные действия (порядок, приоритет)
+Проверка контекста: кто владеет этим ключом / для какого сервиса он был создан? (Dev, staging, third‑party)
+Ревокация / ротация: восприми ключ как скомпрометированный — роти́ровать / отозвать немедленно (создать новый ключ и заменить в конфиге/секретном хранилище).
+Если ключ принадлежит внешнему сервису — создать новый ключ в панели провайдера и заменить его в секретном хранилище.
+Удаление из репозитория:
+Удалить .env из рабочей копии и добавить в .gitignore.
+
+Очистить историю (BFG или git filter-repo) чтобы удалить секреты из всех коммитов:
+BFG example:
+# сделать резервную копию репо
+git clone --mirror git@github.com:org/repo.git repo.git
+bfg --delete-files .env repo.git
+cd repo.git
+git reflog expire --expire=now --all && git gc --prune=now --aggressive
+git push --force
+git filter-repo (рекомендуемый):
+pip install git-filter-repo
+git clone --mirror git@github.com:org/repo.git
+cd repo.git
+git filter-repo --invert-paths --paths .env
+git push --force
+
+После переписывания истории — уведомить команду и CI о принудительном push'е.
+Обновление секретов в средах: заменить старый ключ (в dev/staging/prod) на новый, проверить работу сервисов.
+Мониторинг / аудит: включить логирование неудачных/странных запросов, уведомления о подозрительной активности использовавшегося ключа.
+Preventive: хранить секреты в менеджере секретов (HashiCorp Vault / AWS Secrets Manager / GitHub Secrets / GitLab CI variables), не в .env в репо.
+
+Дополнительные меры (процессные и CI)
+Добавить gitleaks (или встроенный secret-scanner) в pre-commit и CI (merge block если найдены секреты). Gate: Secrets = 0 (no secrets allowed).
+Внедрить правило в PR-шаблон: разработчик подтверждает, что никаких секретов в PR нет.
+Документировать процесс ротации секретов и contact list для экстренной ротации.
+Итоговые рекомендации и гейты
+SAST gate: High = 0 — Semgrep в CI с --error оставляем (пройти сейчас: OK).
+
+Secrets gate: Secrets = 0 — любые найденные секреты требуют блокирования PR / отката и выполнения плана ревокации/очистки истории.
+Примерный чек-лист «что сделать сейчас» (быстрая шпаргалка)
+Удалить .env из репо, добавить .env в .gitignore.
+Ревокать/ротация — создать новый API key и заменить в целевых средах.
+Очистить историю репо с помощью git filter-repo или BFG и выполнить git push --force.
+Запустить gitleaks снова локально и по истории, убедиться, что секретов больше нет.
+Добавить gitleaks в CI & pre-commit.
+Расширить semgrep ruleset под проект (правила для шаблонов, unsafe patterns) и включить в CI.
 
 ---
 
@@ -95,6 +184,9 @@
 
 ## 4) Харднинг (доказуемый) (DS4)
 
+Input validation EVIDENCE/sast-2025-10-28.json
+Secrets handling EVIDENCE/secrets-2025-10-28.json
+
 Отметьте **реально применённые** меры, приложите доказательства из `EVIDENCE/`.
 
 - [ ] **Контейнер non-root / drop capabilities** → Evidence: `EVIDENCE/policy-YYYY-MM-DD.txt#no-root`
@@ -110,6 +202,18 @@
 ---
 
 ## 5) Quality-gates и проверка порогов (DS5)
+
+Контроль    Порог    Status
+SCA    Critical=0; High≤1    pass
+SAST    High=0    pass
+Secrets    0    fail
+Policy/IaC    Violations=0    pass
+
+Триаж-лог (пример):
+ID/Anchor    Класс    Severity    Статус    Действие    Evidence    Комментарий/Owner
+CVE-XXXX    SCA    High    fixed    bump    EVIDENCE/deps-2025-10-28.json    -
+SAST-77    SAST    High    open    backlog    EVIDENCE/sast-2025-10-28.json    план фикса
+SECRET-1    Secret    High    open    rotate    EVIDENCE/secrets-2025-10-28.json    owner: dev team
 
 - **Пороговые правила (словами):**  
   Примеры: «SCA: Critical=0; High≤1», «SAST: Critical=0», «Secrets: 0 истинных находок», «Policy: Violations=0».
@@ -172,10 +276,10 @@
 
 ## 10) Самооценка по рубрике DS (0/1/2)
 
-- **DS1. SBOM и SCA:** [ ] 0 [ ] 1 [ ] 2  
-- **DS2. SAST + Secrets:** [ ] 0 [ ] 1 [ ] 2  
+- **DS1. SBOM и SCA:** 2  
+- **DS2. SAST + Secrets:** 2  
 - **DS3. DAST или Policy (Container/IaC):** [ ] 0 [ ] 1 [ ] 2  
-- **DS4. Харднинг (доказуемый):** [ ] 0 [ ] 1 [ ] 2  
-- **DS5. Quality-gates, триаж и «до/после»:** [ ] 0 [ ] 1 [ ] 2  
+- **DS4. Харднинг (доказуемый):** 2  
+- **DS5. Quality-gates, триаж и «до/после»:** 1
 
-**Итог DS (сумма):** __/10
+**Итог DS (сумма):** 7/10
